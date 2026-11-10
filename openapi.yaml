@@ -1,0 +1,370 @@
+openapi: 3.0.3
+info:
+  title: Customer API
+  version: 1.0.0
+  description: API for creating, retrieving, updating and deleting customer records.
+
+servers:
+  - url: http://localhost:8080
+
+tags:
+  - name: Customers
+    description: Customer operations
+
+paths:
+
+  /api/customers:
+
+    get:
+      tags:
+        - Customers
+      summary: Get all customers
+      operationId: getAllCustomers
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerResponse'
+
+    post:
+      tags:
+        - Customers
+      summary: Create a customer
+      operationId: createCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        '201':
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/customers/{id}:
+
+    parameters:
+      - in: path
+        name: id
+        required: true
+        description: Customer ID
+        schema:
+          type: integer
+          minimum: 1
+
+    get:
+      tags:
+        - Customers
+      summary: Get customer by ID
+      operationId: getCustomerById
+      responses:
+        '200':
+          description: Customer found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Customers
+      summary: Update customer
+      operationId: updateCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        '200':
+          description: Updated customer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Customers
+      summary: Partially update customer
+      operationId: partiallyUpdateCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerPatchRequest'
+      responses:
+        '200':
+          description: Partially updated customer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Customers
+      summary: Delete customer
+      operationId: deleteCustomer
+      responses:
+        '204':
+          description: Deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/customers/page:
+
+    get:
+      tags:
+        - Customers
+      summary: Get customers with pagination
+      operationId: getCustomersPage
+      parameters:
+        - in: query
+          name: page
+          description: Zero-based page number
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+
+        - in: query
+          name: size
+          description: Number of records per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+
+        - in: query
+          name: sort
+          description: Sort property and direction
+          schema:
+            type: string
+            example: firstName,asc
+
+      responses:
+        '200':
+          description: Paginated customers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedCustomerResponse'
+
+components:
+
+  schemas:
+
+    AddressRequest:
+      type: object
+      required:
+        - street
+        - city
+        - country
+      properties:
+        street:
+          type: string
+          minLength: 1
+        city:
+          type: string
+          minLength: 1
+        country:
+          type: string
+          minLength: 1
+        postalCode:
+          type: string
+          example: "11511"
+
+    AddressResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        street:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+
+    CustomerRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - phoneNumber
+        - age
+        - status
+        - address
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+        lastName:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+          minLength: 1
+        age:
+          type: integer
+          minimum: 18
+          maximum: 100
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+        address:
+          $ref: '#/components/schemas/AddressRequest'
+
+    CustomerPatchRequest:
+      type: object
+      description: Only supplied fields will be updated.
+      minProperties: 1
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+        lastName:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+          minLength: 1
+        age:
+          type: integer
+          minimum: 18
+          maximum: 100
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+        address:
+          type: object
+          minProperties: 1
+          properties:
+            street:
+              type: string
+              minLength: 1
+            city:
+              type: string
+              minLength: 1
+            country:
+              type: string
+              minLength: 1
+            postalCode:
+              type: string
+
+    CustomerResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        age:
+          type: integer
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+        address:
+          $ref: '#/components/schemas/AddressResponse'
+
+    PagedCustomerResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        first:
+          type: boolean
+        last:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: Not Found
+        message:
+          type: string
+          example: Customer not found
+
+  responses:
+    BadRequest:
+      description: Invalid request or validation failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 400
+            error: Bad Request
+            message: Validation failed
+
+    NotFound:
+      description: Customer not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 404
+            error: Not Found
+            message: Customer not found
